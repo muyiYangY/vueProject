@@ -60,6 +60,33 @@ const routes: RouteRecordRaw[] = [
                 component: () => import(/* webpackChunkName: "table" */ '../views/mushimp.vue'),
             },
             {
+                path: '/comments',
+                name: 'commnets',
+                meta: {
+                    title: '评论管理',
+                    permiss: '2',
+                },
+                component: () => import(/* webpackChunkName: "table" */ '../views/comments.vue'),
+            },
+            {
+                path: '/users',
+                name: 'users',
+                meta: {
+                    title: '用户管理',
+                    permiss: '2',
+                },
+                component: () => import(/* webpackChunkName: "table" */ '../views/users.vue'),
+            },
+            {
+                path: '/videos',
+                name: 'videos',
+                meta: {
+                    title: '视频管理',
+                    permiss: '2',
+                },
+                component: () => import(/* webpackChunkName: "table" */ '../views/videos.vue'),
+            },
+            {
                 path: '/charts',
                 name: 'basecharts',
                 meta: {

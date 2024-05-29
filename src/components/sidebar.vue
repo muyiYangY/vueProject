@@ -98,6 +98,21 @@ const items = [
                 title: '导出菌菇Excel',
                 permiss: '2',
             },
+            {
+                index: '/comments',
+                title: '评论管理',
+                permiss: '2',
+            },
+            {
+                index: '/users',
+                title: '用户管理',
+                permiss: '2',
+            },
+            {
+                index: '/videos',
+                title: '视频管理',
+                permiss: '2'
+            }
         ],
     },
     {

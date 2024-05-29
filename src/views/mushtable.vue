@@ -2,7 +2,7 @@
 	<div>
 		<div class="container">
 			<div class="search-box">
-				<el-input v-model="query.name" placeholder="用户名" class="search-input mr10" clearable></el-input>
+				<el-input v-model="query.name" placeholder="输入菌菇名" class="search-input mr10" clearable></el-input>
 				<el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
 				<el-button type="warning" :icon="CirclePlusFilled" @click="visible = true">新增</el-button>
 			</div>
@@ -12,16 +12,23 @@
 				<el-table-column prop="category" label="父级分类"></el-table-column>
 				<el-table-column prop="mushroomImage" label="图片" align="center">
 					<template #default="scope">
-						<div
-							@click="upCategoryImg(scope.$index, scope.row)">查看图片</div>
+						<a href="javascript:void(0)" @click="upCategoryImg(scope.$index, scope.row)" style="color: red; font-style: italic;">查看图片</a>
+						<!-- <div
+							@click="upCategoryImg(scope.$index, scope.row)">查看图片
+						</div> -->
 					</template>
 					<!-- <div @click="upCategoryImg = true">查看图片</div> -->
 				</el-table-column>
 				<el-table-column prop="isEat" label="是否能食用"></el-table-column>
 				<el-table-column prop="isPoison" label="是否有毒"></el-table-column>
-				<el-table-column prop="mushroomLocation" label="分布地点" align="center"></el-table-column>
+				<el-table-column prop="mushroomLocation" label="分布地点" align="center" width="150"></el-table-column>
 				<!-- <el-table-column prop="env" label="生长环境" align="center"></el-table-column> -->
-				<el-table-column prop="mushroomDesc" label="描述" align="center"></el-table-column>
+				<el-table-column prop="mushroomDesc" label="描述"  width="200">
+					<template #default="scope">
+						<div style="white-space: pre-wrap;">{{ scope.row.mushroomDesc }}</div>
+					</template>
+				</el-table-column>
+				<!-- <el-table-column prop="mushroomDesc" label="描述" align="center" width="200"></el-table-column> -->
 				<el-table-column prop="mushroom3d" label="3d模型" align="center"></el-table-column>
 
 				<!-- <el-table-column prop="date" label="注册时间" align="center"></el-table-column> -->
@@ -48,6 +55,16 @@
 					</template>
 				</el-table-column>
 			</el-table>
+			<div class="example-pagination-block">
+            <!-- <el-pagination 
+                @size-change="changePage"
+                @current-change="changeCurrentPage"
+                background 
+                layout="prev, pager, next" 
+                :current-page="currentpage" 
+                :page-size="pagesize"  
+                :total="tableData.length" /> -->
+        	</div>
 			<div class="pagination">
 				<el-pagination
 					background
@@ -93,6 +110,9 @@ import TableEdit from '../components/mushtable-edit.vue';
 import TableDetail from '../components/table-detail.vue';
 import MushroomImg from '../components/mushrooms-img.vue'
 import axios from 'axios';
+import { mushSearch, mushSearchOne, mushDelete } from '../api/ymushapi';
+
+// 分页
 
 // 定义一个接口，用于定义数据表格中每个项目的类型
 interface TableItem {
@@ -121,7 +141,7 @@ const pageTotal = ref(0);
 
 // 获取表格数据
 const getData = async () => {
-	const res = await fetchData();
+	const res = await mushSearch();
 	console.log(res.data.data);
 	const eg = [
 		{
@@ -144,10 +164,14 @@ getData();
 
 // 查询操作
 const handleSearch = async() => {
-	const searchUrl = 'http://182.92.65.28:8080/mushrooms/getMushroomByCategory' + query.name
-	const res = await axios.get(searchUrl);
-	console.log(res.data.data);
-	tableData.value = res.data.data;
+	console.log(query.name);
+	if(query.name == ''){
+		const res = await mushSearch();
+		tableData.value = res.data.data;
+	}else {
+		const res = await mushSearchOne(query.name);
+		tableData.value = res.data.data;
+	}
 	// query.pageIndex = 1;
 	// getData();
 };
@@ -167,8 +191,16 @@ const handleDelete = (index: number, row: TableItem) => {
 	})
 		.then(async () => {
 			console.log(mushroomId);
+			const res = await mushDelete(mushroomId);
+			console.log(res);
+			if(res.data.code == 200) {
+				ElMessage.success('删除成功');
+				tableData.value.splice(index, 1);
+			} else {
+				ElMessage.error('删除失败,联系管理员');
+			}
 			
-			const deleteUrl = 'http://182.92.65.28:8080/mushrooms/' + mushroomId;
+			/* const deleteUrl = 'http://182.92.65.28:8080/mushrooms/' + mushroomId;
 			await axios.delete(deleteUrl, {
 				params: {
 					id: mushroomId
@@ -178,7 +210,7 @@ const handleDelete = (index: number, row: TableItem) => {
 				console.log(res);
 				ElMessage.success('删除成功');
 				tableData.value.splice(index, 1);
-			});
+			}); */
 			
 		})
 		.catch(() => {});
@@ -199,6 +231,7 @@ const handleEdit = (index: number, row: TableItem) => {
 const updateData = (row: TableItem) => {
 	idEdit.value ? (tableData.value[idx] = row) : tableData.value.unshift(row);
 	console.log(tableData.value);
+
 	closeDialog();
 };
 

@@ -1,8 +1,8 @@
 <template>
 	<el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-		<el-form-item label="Id" prop="categoryId">
+		<!-- <el-form-item label="Id" prop="categoryId">
 			<el-input v-model="form.categoryId"></el-input>
-		</el-form-item>
+		</el-form-item> -->
 		<el-form-item label="类别" prop="categoryName">
 			<el-input v-model="form.categoryName"></el-input>
 		</el-form-item>
@@ -43,6 +43,7 @@
 import { ElMessage, FormInstance, FormRules, UploadProps } from 'element-plus';
 import { ref } from 'vue';
 import axios from 'axios';
+import { tableEditSave, tableEditUpdate } from '../api/ymushapi';
 
 // 通过defineProps定义props对象，包含了三个属性
 const props = defineProps({
@@ -77,10 +78,9 @@ const rules: FormRules = {
 const formRef = ref<FormInstance>();
 const saveEdit = (formEl: FormInstance | undefined) => {
 	if (!formEl) return;
-	formEl.validate(valid => {
+	formEl.validate(async valid => {
 		if (!valid) return false;
 		if(!props.edit){
-			const apiUrl = 'http://182.92.65.28:8080/category/saveList'
 			console.log(form.value);
 			let dede = [
 				{
@@ -92,18 +92,16 @@ const saveEdit = (formEl: FormInstance | undefined) => {
 					"categoryDesc": form.value.categoryDesc
 				},
 			]
-			axios.post(apiUrl, dede)
-			.then(function(res) {
-				console.log(res);
-				props.update(form.value);
-				ElMessage.success('保存成功！');
-			})
-			.catch(function(error){
-				console.log(error);
-			});
+			const res = await tableEditSave(dede)
+			console.log(res);
+			if(res.data.code == 200) {
+				props.update(form.value)
+				ElMessage.success('保存成功!')
+			} else {
+				ElMessage.error('保存失败!')
+			}
 		
 		} else {
-			const updateUrl = 'http://182.92.65.28:8080/category';
 			let dede =
 				{
 					"categoryId": form.value.categoryId,
@@ -113,16 +111,14 @@ const saveEdit = (formEl: FormInstance | undefined) => {
 					"categoryRoot": form.value.categoryRoot,
 					"categoryDesc": form.value.categoryDesc
 				}
-			axios.put(updateUrl, dede)
-			.then(function(res) {
-				console.log(res);
-				props.update(form.value);
-				ElMessage.success('修改成功！');
-			})
-			.catch(function(error){
-				console.log(error);
-			});
-
+			const res = await tableEditUpdate(dede);
+			console.log(res);
+			if(res.data.code == 200) {
+				props.update(form.value)
+				ElMessage.success('修改成功!');
+			} else {
+				ElMessage.error('修改失败!');
+			}
 		}
 		
 	});

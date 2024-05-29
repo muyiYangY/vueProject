@@ -131,7 +131,7 @@ const handleMany = async () => {
             categoryDesc: item['categoryDesc'],
         };
     });
-    const apiUrl = 'http://182.92.65.28:8080/category/saveList'
+    const apiUrl = 'http://101.200.79.152:8080/category/saveList'
     console.log(list);
     
     axios.post(apiUrl, list)

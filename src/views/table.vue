@@ -2,7 +2,7 @@
 	<div>
 		<div class="container">
 			<div class="search-box">
-				<el-input v-model="query.name" placeholder="用户名" class="search-input mr10" clearable></el-input>
+				<el-input v-model="query.name" placeholder="输入类别名" class="search-input mr10" clearable></el-input>
 				<el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
 				<el-button type="warning" :icon="CirclePlusFilled" @click="visible = true">新增</el-button>
 			</div>
@@ -15,7 +15,7 @@
 					<template #default="scope">
 						<el-upload
 						class="table-td-thumb"
-						action="http://182.92.65.28:8080/category/saveImage"
+						action="http://101.200.79.152:8080/category/saveImage"
 						:data="() => ({
 							'categoryId': scope.row.categoryId,
 							'imageFile': selectedImage
@@ -31,16 +31,6 @@
 					</template>
 				</el-table-column>
 				<el-table-column prop="categoryDesc" label="描述" align="center"></el-table-column>
-				<!-- <el-table-column prop="address" label="地址" align="center"></el-table-column>
-				<el-table-column label="账户状态" align="center">
-					<template #default="scope">
-						<el-tag :type="scope.row.state ? 'success' : 'danger'">
-							{{ scope.row.state ? '正常' : '异常' }}
-						</el-tag>
-					</template>
-				</el-table-column>
-
-				<el-table-column prop="date" label="注册时间" align="center"></el-table-column> -->
 				<el-table-column label="操作" width="280" align="center">
 					<template #default="scope">
 						<el-button
@@ -99,6 +89,7 @@ import { fetchData } from '../api/index';
 import TableEdit from '../components/table-edit.vue';
 import TableDetail from '../components/table-detail.vue';
 import { Plus } from '@element-plus/icons-vue'
+import { tableSearch, tableSearchOne, tableDelete } from '../api/ymushapi';
 
 import type { UploadProps } from 'element-plus'
 import axios from 'axios';
@@ -154,18 +145,18 @@ const tableData = ref<TableItem[]>([]);
 const pageTotal = ref(0);
 // 获取表格数据
 const getData = async () => {
-	const res = await fetchData();
-	console.log(res.data.data);
+	const res = await tableSearch();
+	console.log(res);
 	tableData.value = res.data.data;
-	
 	pageTotal.value = res.data.pageTotal || 50;
 };
 getData();
 
-// 查询操作
+// 查询操作   ???????
 const handleSearch = async() => {
-	const searchUrl = 'http://182.92.65.28:8080/category/' + query.name
-	const res = await axios.get(searchUrl);
+	const res = await tableSearchOne(query.name)
+	//const searchUrl = 'http://182.92.65.28:8080/category/' + query.name
+	//const res = await axios.get(searchUrl);
 	console.log(res.data.data);
 	tableData.value = res.data.data;
 	query.pageIndex = 1;
@@ -185,22 +176,18 @@ const handleDelete = (index: number, row: TableItem) => {
 	ElMessageBox.confirm('确定要删除吗？', '提示', {
 		type: 'warning'
 	})
-		.then(() => {
-			const deleteUrl = 'http://182.92.65.28:8080/category';
-			axios.delete(deleteUrl, {
-				params: {
-					categoryId: categoryId
-				}
-			})
-			.then((res) => {
+		.then(async () => {
+			const res = await tableDelete(categoryId);
+			console.log(res);
+			if(res.data.code == 200) {
 				ElMessage.success('删除成功');
 				tableData.value.splice(index, 1);
 				console.log(res);
-			})
-			.catch((err) => {
-				console.log(err);
-			});
-			
+			} else {
+				ElMessage.error('删除失败');
+				console.log(res);
+				
+			}
 		})
 		.catch(() => {});
 };

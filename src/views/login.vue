@@ -74,7 +74,7 @@ const submitForm = (formEl: FormInstance | undefined) => {
     formEl.validate((valid: boolean) => {
         if (valid) {
             if (valid) {
-            const apiUrl = 'http://182.92.65.28:8080/user/loginMaster';
+            const apiUrl = 'http://101.200.79.152:8080/user/loginMaster';
             const formData = new FormData();
     
             console.log('1111');

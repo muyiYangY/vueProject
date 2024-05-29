@@ -19,6 +19,7 @@ import { Plus } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus';
 import type { UploadProps, UploadUserFile } from 'element-plus'
 import axios from 'axios';
+import { mushImg, mushImgGet, mushImgDel } from '../api/ymushapi';
 
 // 通过defineProps定义props对象，包含了三个属性
 const props = defineProps({
@@ -40,21 +41,18 @@ const uploadImgg = async () => {
   let fomedata = new FormData();
   fomedata.append('id', props.data.mushroomId)
   fomedata.append('imageFile', selectedImage);
-  await axios.post('http://182.92.65.28:8080/mushrooms/saveImage', fomedata, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  }).then((res) => {
+  const res = await mushImg(fomedata);
+  if(res.data.code == 200) {
     console.log(res);
     ElMessage.success('上传成功!')
-  })
+  }
 }
 const headers = {
   'Content-Type': 'multipart/form-data'
   }
 const fileList = ref<UploadUserFile[]>([])
 const getImg = async () => {
-    const res = await axios.get('http://182.92.65.28:8080//mushrooms/getMushroomImgs/' + props.data.mushroomId)
+  const res = await mushImgGet(props.data.mushroomId)
     console.log(res.data.data)
     fileList.value = res.data.data.map((item) => {
       return {
@@ -93,7 +91,14 @@ const handleAvatarError: UploadProps['onError'] = (error, uploadFile) => {
 // rmImg
 const rmImg: UploadProps['onRemove'] = async (uploadFile, uploadFiles) => {
   console.log(uploadFile, uploadFiles)
-  await axios.delete('http://182.92.65.28:8080/mushrooms/deleteMushroomImg', {
+  
+  const res = await mushImgDel(uploadFile.name)
+  if( res.data.code = 200){
+    ElMessage.success('删除成功!')
+  } else {
+    ElMessage.error('删除失败,联系管理员')
+  }
+  /* await axios.delete('http://182.92.65.28:8080/mushrooms/deleteMushroomImg', {
     params: {
       id: uploadFile.name
     }
@@ -101,7 +106,7 @@ const rmImg: UploadProps['onRemove'] = async (uploadFile, uploadFiles) => {
   .then(res => {
     console.log(res);
     ElMessage.success('删除成功!')
-  })
+  }) */
 }
 
 

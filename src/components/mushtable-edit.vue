@@ -1,17 +1,13 @@
 <template>
 	<el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-		<!-- <el-form-item label="Id" prop="categoryId">
-			<el-input v-model="form.categoryId"></el-input>
-		</el-form-item> -->
 		<el-form-item label="菌菇名" prop="mushroomName">
 			<el-input v-model="form.mushroomName"></el-input>
 		</el-form-item>
 		<el-form-item label="父级分类" prop="categoryId">
-			<!-- <el-input v-model="form.categoryId"></el-input> -->
 			<el-autocomplete
 				v-model="state"
 				:fetch-suggestions="querySearchAsync"
-				placeholder="请输入分类等级"
+				placeholder="请输入分类名"
 				@select="handleSelect"
 				:trigger-on-focus="false"
 			/>
@@ -39,41 +35,9 @@
 			<el-input v-model="form.mushroomLocation"></el-input>
 		</el-form-item>
 		<el-form-item label="描述" prop="mushroomDesc">
-			<el-input v-model="form.mushroomDesc"></el-input>
+			<el-input type="textarea" :rows="4" v-model="form.mushroomDesc"></el-input>
+			<!-- <el-input v-model="form.mushroomDesc"></el-input> -->
 		</el-form-item>
-		<!-- <el-form-item label="用户名" prop="name">
-			<el-input v-model="form.name"></el-input>
-		</el-form-item>
-		<el-form-item label="账户余额" prop="money">
-			<el-input v-model.number="form.money"></el-input>
-		</el-form-item>
-		<el-form-item label="地址" prop="address">
-			<el-input v-model="form.address"></el-input>
-		</el-form-item>
-		<el-form-item label="账户状态" prop="state">
-			<el-switch
-				v-model="form.state"
-				:active-value="1"
-				:inactive-value="0"
-				active-text="正常"
-				inactive-text="异常"
-			></el-switch>
-		</el-form-item>
-		<el-form-item label="注册日期" prop="date">
-			<el-date-picker type="date" v-model="form.date" value-format="YYYY-MM-DD"></el-date-picker>
-		</el-form-item>
-		<el-form-item label="上传头像" prop="thumb">
-			<el-upload
-				class="avatar-uploader"
-				action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
-				:show-file-list="false"
-				:on-success="handleAvatarSuccess"
-				:before-upload="beforeAvatarUpload"
-			>
-				<img v-if="form.thumb" :src="form.thumb" class="avatar" />
-				<el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
-			</el-upload>
-		</el-form-item> -->
 		<el-form-item>
 			<el-button type="primary" @click="saveEdit(formRef)">保 存</el-button>
 		</el-form-item>
@@ -84,6 +48,7 @@
 import { ElMessage, FormInstance, FormRules, UploadProps } from 'element-plus';
 import { ref, onMounted, vModelCheckbox } from 'vue';
 import axios from 'axios';
+import { mushEidtSave, mushEditUpdate, mushEditSearch } from '../api/ymushapi';
 
 let poison = ref(0)
 let yesno = ref(1)
@@ -128,28 +93,34 @@ let list = []
 let filterData = []
 const querySearchAsync = async (queryString: string, cb: (arg: any) => void) => {
   
-  if(queryString&&queryString.length > 0) {
-	const apiUrl = 'http://182.92.65.28:8080/category/' + queryString
-	number = Number(queryString)
-	await axios.get(apiUrl)
-	.then(res => {
-		if(res.data.data.length > 0){
-			list = res.data.data.map(item => {
-				return {
-					value: `${item.categoryName}`
-				}
-			})
-			
-		}
+  if(queryString&&queryString.length >= 0) {
+	const res = await mushEditSearch()
+	console.log(res);
+	try {
+		list = res.data.data.map(item => {
+			return {
+				id: item.categoryId,
+				value: item.categoryName
+			}
+		})
+		list = list.filter(item => item.value.startsWith(queryString));
+		filterData = list
 		cb(list)
+		console.log(queryString);
 		
-	})
-	
+	} catch (error) {
+		console.log(error);
+		
+	}
   }
 }
 
+
 const handleSelect = (item) => {
 	state.value = item.value
+	console.log(state.value);
+	console.log(filterData);
+	form.value.categoryId = filterData == null ? form.value.categoryId : filterData[0].id;
 }
 
 
@@ -163,10 +134,9 @@ const rules: FormRules = {
 const formRef = ref<FormInstance>();
 const saveEdit = (formEl: FormInstance | undefined) => {
 	if (!formEl) return;
-	formEl.validate(valid => {
+	formEl.validate(async valid => {
 		if (!valid) return false;
 		if(!props.edit){
-			const apiUrl = 'http://182.92.65.28:8080/mushrooms' 
 			let dede = 
 				{
 					mushroomId: 0,
@@ -178,43 +148,36 @@ const saveEdit = (formEl: FormInstance | undefined) => {
 					mushroomDesc: form.value.mushroomDesc,
 					module3d: ''
 				}	
-			console.log(dede);
-			
-			axios.post(apiUrl, dede)
-				.then(res => {
-					console.log(res);
-					props.update(form.value);
-					ElMessage.success('保存成功！');
-				})
-				.catch(error => {
-					if (error.response) {
-						// 请求已发出，但服务器响应的状态码不在 2xx 范围内
-						console.log(error.response.data);
-						console.log(error.response.status);
-						console.log(error.response.headers);
-					} else if (error.request) {
-						// 请求已发出，但没有收到响应
-						console.log(error.request);
-					} else {
-						// 发生了一些问题，导致了请求的发送
-						console.log('Error', error.message);
-					}
-					console.log(error.config);
-				});
+			const res = await mushEidtSave(dede)
+			console.log(res);
+			if(res.data.code == 200) {
+				props.update(form.value);
+				ElMessage.success('保存成功!!')
+			} else {
+				ElMessage.error('保存失败!!')
+			}
 		} else {
-			const updataUrl = 'http://182.92.65.28:8080/mushrooms/'+form.value.mushroomId; 
+			
+			// const updataUrl = 'http://182.92.65.28:8080/mushrooms/'+form.value.mushroomId; 
 			let dede = 
 				{
+					mushroomId: form.value.mushroomId,
 					mushroomName: form.value.mushroomName,
 					categoryId: form.value.categoryId,
 					isEat: yesno.value == 1? 1 : 0,
 					isPoison: poison.value == 1? 1 : 0,
 					mushroomLocation: form.value.mushroomLocation,
-					mushroomDesc: form.value.mushroomDesc,
+					mushroomDesc: form.value.mushroomDesc
 				}
-				console.log(dede);
-				
-			axios.put(updataUrl, dede)
+			console.log(dede);
+			const res = await mushEditUpdate(dede)
+			if(res.data.code == 200) {
+				props.update(form.value);
+				ElMessage.success('修改成功！');
+			} else {
+				ElMessage.error('修改失败！请联系管理员');
+			}
+			/* axios.put(updataUrl, dede)
 				.then(res => {
 					console.log(res);
 					props.update(form.value);
@@ -223,7 +186,7 @@ const saveEdit = (formEl: FormInstance | undefined) => {
 				.catch(error => {
 					console.log(error);
 					
-				})
+				}) */
 		}
 		
 		

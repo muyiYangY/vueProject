@@ -125,13 +125,13 @@ const handleMany = async () => {
             id: maxId + index + 1,  // 生成唯一的新 ID
             mushroomName: item['菌菇名'],
             categoryId: item['父级分类'],
-            isEat: item['是否能食用'],
-            isPoison: item['是否有毒'],
+            isEat: item['是否能食用'] === '是' ? 1 : 0,  // 转换为1或0
+            isPoison: item['是否有毒'] === '是' ? 1 : 0,  // 转换为1或0
             mushroomLocation: item['分布地点'],
             mushroomDesc: item['分类描述'],
         };
     });
-    const apiUrl = 'http://182.92.65.28:8080/mushrooms/saveList'
+    const apiUrl = 'http://101.200.79.152:8080/mushrooms/saveList'
     console.log(list);
     
     axios.post(apiUrl, list)
