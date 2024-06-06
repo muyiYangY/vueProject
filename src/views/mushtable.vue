@@ -21,19 +21,30 @@
 				</el-table-column>
 				<el-table-column prop="isEat" label="是否能食用"></el-table-column>
 				<el-table-column prop="isPoison" label="是否有毒"></el-table-column>
-				<el-table-column prop="mushroomLocation" label="分布地点" align="center" width="150"></el-table-column>
-				<!-- <el-table-column prop="env" label="生长环境" align="center"></el-table-column> -->
+				<!-- <el-table-column prop="mushroomLocation" label="分布地点" align="center" width="150"></el-table-column> -->
+				<el-table-column prop="locations" label="分布地点" align="center" width="150">
+					<!-- <el-table-column label="省级行政区"/>
+					<el-table-column label="城市"/> -->
+				</el-table-column>
 				<el-table-column prop="mushroomDesc" label="描述"  width="200">
 					<template #default="scope">
 						<div style="white-space: pre-wrap;">{{ scope.row.mushroomDesc }}</div>
 					</template>
 				</el-table-column>
 				<!-- <el-table-column prop="mushroomDesc" label="描述" align="center" width="200"></el-table-column> -->
-				<el-table-column prop="mushroom3d" label="3d模型" align="center"></el-table-column>
+				<!-- <el-table-column prop="mushroom3d" label="3d模型" align="center"></el-table-column> -->
 
 				<!-- <el-table-column prop="date" label="注册时间" align="center"></el-table-column> -->
 				<el-table-column label="操作" width="280" align="center">
 					<template #default="scope">
+						<el-button
+							type="primary"
+							size="small"
+							:icon="Edit"
+							@click="addlocation(scope.$index, scope.row)"
+							v-permiss="15">
+							添加地点
+						</el-button>
 						<el-button
 							type="primary"
 							size="small"
@@ -98,6 +109,13 @@
 		>
 			<MushroomImg :data="imgData" :update="updateImg"/>
 		</el-dialog>
+		<el-dialog v-model="mapsee" title="选择地点" :custom-class="'custom-dialog'">
+			<el-transfer v-model="selectedOptions" :data="placedata" :props="{key: 'key', label: 'label', disabled: 'disabled'}"/>
+			<div slot="footer" class="dialog-footer custom-footer">
+				<el-button @click="mapsee = false">取消</el-button>
+				<el-button type="primary" @click="mapsave">保存</el-button>
+			</div>
+		</el-dialog>
 	</div>
 </template>
 
@@ -105,13 +123,17 @@
 import { ref, reactive } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Delete, Edit, Search, CirclePlusFilled, View } from '@element-plus/icons-vue';
-import { fetchData } from '../api/mush';
 import TableEdit from '../components/mushtable-edit.vue';
 import TableDetail from '../components/table-detail.vue';
 import MushroomImg from '../components/mushrooms-img.vue'
-import axios from 'axios';
-import { mushSearch, mushSearchOne, mushDelete } from '../api/ymushapi';
+import { mushSearch, mushSearchOne, mushDelete, mapget } from '../api/ymushapi';
 
+
+// 获取身份密钥
+let token = localStorage.getItem('token')
+  const headers = {
+    token: token
+  }
 // 分页
 
 // 定义一个接口，用于定义数据表格中每个项目的类型
@@ -143,22 +165,13 @@ const pageTotal = ref(0);
 const getData = async () => {
 	const res = await mushSearch();
 	console.log(res.data.data);
-	const eg = [
-		{
-			mushroomId: 0,
-			mushroomName: '蘑菇',
-			category: 'ke',
-			mushroomImage: '0',
-			isEat: 1,
-			isPoison: 0,
-			mushroomLocation: '杭州',
-			mushroomDesc: '蘑菇',
-			mushroom3d: '0'
+	tableData.value = res.data.data
+	/* .map(item => {
+		return {
+			...item,
+			locations: locations
 		}
-	]
-	tableData.value = res.data.data;
-	// tableData.value = eg
-	// pageTotal.value = res.data.pageTotal || 50;
+	}); */
 };
 getData();
 
@@ -200,22 +213,55 @@ const handleDelete = (index: number, row: TableItem) => {
 				ElMessage.error('删除失败,联系管理员');
 			}
 			
-			/* const deleteUrl = 'http://182.92.65.28:8080/mushrooms/' + mushroomId;
-			await axios.delete(deleteUrl, {
-				params: {
-					id: mushroomId
-				}
-			})
-			.then(res => {
-				console.log(res);
-				ElMessage.success('删除成功');
-				tableData.value.splice(index, 1);
-			}); */
-			
 		})
 		.catch(() => {});
 };
+// ----------------------------------------------------------------------
+// band to place
+const mapsee = ref(false)
+interface Option {
+	id: number;
+	key: number;
+	label: string
+	disabled: boolean
+}
 
+interface LocationData {
+	id: number;
+	province: string;
+	city: string;
+}
+
+const placedata = ref<Option[]>()
+const selectedOptions = ref<Option[]>([])
+const addlocation = async (index: number, row: any) => {
+  console.log('index:', index, 'row', row);
+  const res = await mapget(headers);
+  console.log(res.data.data);
+
+  // Assuming res.data.data is an array of LocationData
+  const locationData: LocationData[] = res.data.data;
+
+  // Map the data to Option[]
+  const newPlaceData: Option[] = locationData.map((location, idx) => ({
+	id: location.id,
+	key: idx + 1, // or use another unique identifier
+    label: `${location.province} - ${location.city}`,
+    disabled: false, // Adjust this if you need some conditions to disable the option
+  }));
+
+  console.log(newPlaceData);
+  
+  placedata.value = newPlaceData;
+  mapsee.value = true;
+};
+
+const mapsave = async() => {
+	mapsee.value = false
+	console.log(selectedOptions.value);
+	
+}
+// ----------------------------------------------------------------------
 const visible = ref(false);
 let idx: number = -1;
 const idEdit = ref(false);
@@ -276,5 +322,14 @@ const upCategoryImg = (index: number, row: TableItem) => {
 	margin: auto;
 	width: 40px;
 	height: 40px;
+}
+.custom-dialog {
+  position: relative;
+}
+
+.custom-footer {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
 }
 </style>

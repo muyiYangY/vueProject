@@ -31,9 +31,9 @@
 			</el-select>
 		</el-form-item>
 		
-		<el-form-item label="分布地点" prop="mushroomLocation">
+		<!-- <el-form-item label="分布地点" prop="mushroomLocation">
 			<el-input v-model="form.mushroomLocation"></el-input>
-		</el-form-item>
+		</el-form-item> -->
 		<el-form-item label="描述" prop="mushroomDesc">
 			<el-input type="textarea" :rows="4" v-model="form.mushroomDesc"></el-input>
 			<!-- <el-input v-model="form.mushroomDesc"></el-input> -->

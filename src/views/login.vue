@@ -94,6 +94,9 @@ const submitForm = (formEl: FormInstance | undefined) => {
                     localStorage.setItem('ms_username', param.username);
                     const keys = permiss.defaultList[param.username == 'admin' ? 'admin' : 'user'];
                     permiss.handleSet(keys);
+                    localStorage.setItem('token', response.data.msg)
+                    console.log(response.data.msg);
+                    
                     localStorage.setItem('ms_keys', JSON.stringify(keys));
                     router.push('/');
                     if (checked.value) {

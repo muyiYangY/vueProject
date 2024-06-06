@@ -146,3 +146,128 @@ export const mushEditSearch = async () => {
         console.log(error);
     }
 }
+
+/* -----------------------------comments--------------------------------- */
+// 评论区页面
+// 获取信息
+ export const commentsget = async () => {
+    try {
+        const response = await instance.get('/post/list')
+        return response;
+    } catch (error) {
+        console.log(error);
+        
+    }
+ }
+ // 删除评论
+ export const commentsdel = async (data: any) => {
+    try {
+        const response = await instance.delete('/post/' + data)
+        return response;
+    } catch (error) {
+        console.log(error);
+        
+    }
+ }
+
+
+ /* -----------------------------users--------------------------------- */
+ // 用户页面
+ export const usersget = async (data: any) => {
+    try {
+        console.log(data);
+        const response = await instance.get('/root/all', {
+            headers: {
+                'token': data
+            }
+        })
+        return response;
+    } catch (error) {
+        console.log(error);
+        
+    }
+ }
+
+ // 创建用户
+ export const usersbuild = async (data: any) => {
+    try {
+        console.log(data);
+        const response = await instance.post('/root/createUsr', data, {
+            headers: {
+                Authorization: data
+            }
+        })
+        return response;
+    } catch (error) {
+        console.log(error);
+    }
+ }
+
+  /* -----------------------------videos--------------------------------- */
+  // 获取video
+  export const videoget = async () => {
+    try {
+        const response = await instance.get('/video/list')
+        return response;
+    } catch (error) {
+        console.log(error);
+        
+    }
+  }
+
+  export const videoopen = async (data: any) => {
+    try {
+        console.log(data);
+        console.log(typeof(data));
+        const response = await instance.get('/video', data)
+        return response
+    } catch (error){        
+        console.log(error);
+        
+    } 
+  }
+
+
+  /* -----------------------------map--------------------------------- */
+  export const mapget = async (headers: any) => {
+    try {
+        console.log(headers);
+        
+        const response = await instance.get('/location', {headers})
+        return response
+    } catch (error) {
+        console.log(error);
+    }
+  }
+
+  export const mapsave = async (data: any, headers: any) => {
+    try {
+        // console.log('location:', data);
+        // console.log('headers:', headers);
+        
+        const response = await instance.post('/location', data, {headers})
+        return response
+    } catch (error) {
+        console.log(error);
+        
+    }
+  }
+
+  export const mapsavelist = async (data: any, headers: any) => {
+    try {
+        const response = await instance.post('/location/list', data, {headers})
+        return response
+    } catch (error) {
+        console.log(error)
+    }
+  }
+
+  export const mapdelete = async (data: number, headers: any) => {
+    try {
+        const response = await instance.delete('/location?id=' + data, {headers})
+        return response
+    } catch (error) {
+        console.log(error);
+        
+    }
+  }

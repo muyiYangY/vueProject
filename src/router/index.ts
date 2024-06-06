@@ -78,6 +78,15 @@ const routes: RouteRecordRaw[] = [
                 component: () => import(/* webpackChunkName: "table" */ '../views/users.vue'),
             },
             {
+                path: '/location',
+                name: 'location',
+                meta: {
+                    title: '位置坐标',
+                    permiss: '2',
+                },
+                component: () => import(/* webpackChunkName: "table" */ '../views/location.vue'),
+            },
+            {
                 path: '/videos',
                 name: 'videos',
                 meta: {

@@ -5,33 +5,47 @@
     <el-button type="warning" icon="el-icon-circle-plus" @click="handleAdd">新增</el-button>
   </div>
   <el-table :data="tableData" border style="width: 100%">
-    <el-table-column prop="id" label="ID" width="50" />
-    <el-table-column prop="objId" label="对象ID" width="100" />
-    <el-table-column prop="title" label="标题" width="150" />
-    <el-table-column prop="content" label="内容" width="200" />
-    <el-table-column prop="time" label="发布时间" width="150" />
-    <el-table-column prop="token" label="Token" width="150" />
-    <el-table-column prop="image" label="头像" width="150">
+    <el-table-column prop="userId" label="用户ID" width="100" />
+    <el-table-column prop="username" label="用户名" width="150" />
+    <el-table-column prop="email" label="邮箱" width="200" />
+    <el-table-column prop="gender" label="性别" width="100" />
+    <el-table-column prop="address" label="地址" width="100" />
+    <el-table-column prop="birthdate" label="生日" width="100" />
+    <el-table-column prop="registrationTime" label="注册时间" width="100" />
+    <el-table-column prop="level" label="等级" width="100" />
+    <el-table-column prop="nickName" label="昵称" width="150" />
+    <!-- <el-table-column prop="avatar" label="头像" width="150">
       <template #default="scope">
         <el-upload>
-          <img v-if="scope.row.image" :src="scope.row.image" alt="image" style="width: 100px; height: auto;" />
+          <img v-if="scope.row.avatar" :src="'http://101.200.79.152:8080' + scope.row.avatar" alt="avatar" style="width: 100px; height: auto;" />
           <div v-else>上传头像</div>
         </el-upload>
-        
       </template>
-    </el-table-column>
-    <el-table-column prop="background" label="背景" width="150">
+    </el-table-column> -->
+    <el-table-column prop="backImg" label="背景图片" width="150">
       <template #default="scope">
         <el-upload
           :before-upload="bkupload"
           :on-success="(response, file) => bkuploadsuccess(response, file, scope.row)"
           :show-file-list="false">
-          <img v-if="scope.row.background" :src="scope.row.background" alt="image" style="width: 100px; height: auto;" />
+          <img v-if="scope.row.backImg" :src="scope.row.backImg" alt="background" style="width: 100px; height: auto;" />
           <div v-else>上传背景</div>
         </el-upload>
-        
       </template>
     </el-table-column>
+    <el-table-column prop="userImage" label="用户图片" width="150">
+    <template #default="scope">
+      <el-upload
+        :before-upload="userImageUpload"
+        :on-success="(response, file) => userImageUploadSuccess(response, file, scope.row)"
+        :show-file-list="false">
+        <img v-if="scope.row.userImage" :src="scope.row.userImage" alt="user" style="width: 100px; height: auto;" />
+        <div v-else>上传用户图片</div>
+        </el-upload>
+      </template>
+    </el-table-column>
+    <!-- <el-table-column prop="userImage" label="用户图片" width="150" /> -->
+    <el-table-column prop="bio" label="简介" width="200" />
     <el-table-column label="操作" width="150">
       <template #default="scope">
         <el-button size="small" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
@@ -42,44 +56,57 @@
 
   <el-dialog title="新增/编辑" v-model="visible">
     <el-form :model="form">
-      <el-form-item label="ID">
-        <el-input v-model="form.id" :disabled="true"></el-input>
+      <el-form-item label="用户ID">
+        <el-input v-model="form.userId" :disabled="true"></el-input>
       </el-form-item>
-      <el-form-item label="对象ID">
-        <el-input v-model="form.objId"></el-input>
+      <el-form-item label="用户名">
+        <el-input v-model="form.username"></el-input>
       </el-form-item>
-      <el-form-item label="标题">
-        <el-input v-model="form.title"></el-input>
+      <el-form-item label="邮箱">
+        <el-input v-model="form.email"></el-input>
       </el-form-item>
-      <el-form-item label="内容">
-        <el-input v-model="form.content"></el-input>
+      <el-form-item label="性别">
+        <el-input v-model="form.gender"></el-input>
       </el-form-item>
-      <el-form-item label="发布时间">
-        <el-input v-model="form.time"></el-input>
+      <el-form-item label="地址">
+        <el-input v-model="form.address"></el-input>
       </el-form-item>
-      <el-form-item label="Token">
-        <el-input v-model="form.token"></el-input>
+      <el-form-item label="生日">
+        <el-input v-model="form.birthdate"></el-input>
       </el-form-item>
-      <!-- <el-form-item label="头像">
+      <el-form-item label="注册时间">
+        <el-input v-model="form.registrationTime"></el-input>
+      </el-form-item>
+      <el-form-item label="等级">
+        <el-input v-model="form.level"></el-input>
+      </el-form-item>
+      <el-form-item label="昵称">
+        <el-input v-model="form.nickName"></el-input>
+      </el-form-item>
+      <el-form-item label="头像">
         <el-upload
           :before-upload="handleImageChange"
           list-type="picture-card"
-          :show-file-list="false"
-        >
-          <img v-if="form.image" :src="form.image" alt="image" class="table-td-thumb" />
+          :show-file-list="false">
+          <img v-if="form.avatar" :src="form.avatar" alt="avatar" class="table-td-thumb" />
           <i v-else class="el-icon-plus"></i>
         </el-upload>
       </el-form-item>
-      <el-form-item label="背景">
+      <el-form-item label="背景图片">
         <el-upload
           :before-upload="handleBackgroundChange"
           list-type="picture-card"
-          :show-file-list="false"
-        >
-          <img v-if="form.background" :src="form.background" alt="background" class="table-td-thumb" />
+          :show-file-list="false">
+          <img v-if="form.backImg" :src="form.backImg" alt="background" class="table-td-thumb" />
           <i v-else class="el-icon-plus"></i>
         </el-upload>
-      </el-form-item> -->
+      </el-form-item>
+      <el-form-item label="用户图片">
+        <el-input v-model="form.userImage"></el-input>
+      </el-form-item>
+      <el-form-item label="简介">
+        <el-input v-model="form.bio"></el-input>
+      </el-form-item>
     </el-form>
     <span slot="footer" class="dialog-footer">
       <el-button @click="visible = false">取消</el-button>
@@ -88,63 +115,116 @@
   </el-dialog>
 </template>
 
+
 <script lang="ts" setup>
 import { ref } from 'vue';
+import { usersget } from '../api/ymushapi'
 
 interface TableData {
-  id: number;
-  objId: string;
-  title: string;
-  content: string;
-  time: string;
-  token: string;
-  image: string;
-  background: string;
+  userId: number;
+  username: string;
+  email: string;
+  gender: string;
+  address: string;
+  birthdate: string;
+  registrationTime: string;
+  level: number;
+  nickName: string;
+  avatar: string;
+  backImg: string;
+  userImage: string;
+  bio: string;
 }
 
-const tableData = ref<TableData[]>([
-  { id: 1, objId: '1', title: '标题1', content: '内容1', time: '2023-01-01', token: 'token1', image: 'https://via.placeholder.com/100', background: 'https://via.placeholder.com/100' },
-  { id: 2, objId: '2', title: '标题2', content: '内容2', time: '2023-01-02', token: 'token2', image: 'https://via.placeholder.com/100', background: 'https://via.placeholder.com/100'  },
-  { id: 1, objId: '1', title: '标题1', content: '内容1', time: '2023-01-01', token: 'token1', image: '', background: 'https://via.placeholder.com/100' },
-]);
+const tableData = ref<TableData[]>([]);
 
 const query = ref({ name: '' });
-const visible = ref(false);  // 等价于useState????
+const visible = ref(false);
 const isEdit = ref(false);
 const form = ref<TableData>({
-  id: 0,
-  objId: '',
-  title: '',
-  content: '',
-  time: '',
-  token: '',
-  image: '',
-  background: ''
+  userId: 0,
+  username: '',
+  email: '',
+  gender: '',
+  address: '',
+  birthdate: '',
+  registrationTime: '',
+  level: 0,
+  nickName: '',
+  avatar: '',
+  backImg: '',
+  userImage: '',
+  bio: ''
 });
 
-const handleSearch = () => {
+// 获取数据
+const getData = async () => {
+  const token = localStorage.getItem('token');
+  console.log(token);
+  const res = await usersget(token)
+  console.log(res);
+  // 处理日期格式
+  /* const processedData = res.data.map(item => {
+    return {
+      ...item,
+      registrationTime: item.registrationTime.split('T')[0],
+      birthdate: item.birthdate.split('T')[0]
+    };
+  });
+
+  tableData.value = processedData; */
+}
+getData()
+
+const handleSearch = async () => {
   console.log('Search:', query.value.name);
+  const token = localStorage.getItem('token');
+  console.log(token);
+  const res = await usersget(token);
+  console.log(res);
+  if (res && res.data) {
+    tableData.value = res.data.map((user: any) => ({
+      userId: user.userId,
+      username: user.username,
+      email: user.email,
+      gender: user.gender,
+      address: user.address,
+      birthdate: user.birthdate,
+      registrationTime: user.registrationTime,
+      level: user.level,
+      nickName: user.nickName,
+      avatar: `http://101.200.79.152:8080/${user.avatar}`,
+      backImg: `http://101.200.79.152:8080/${user.backImg}`,
+      userImage: user.userImage,
+      bio: user.bio
+    }));
+  }
 };
 
 const handleAdd = () => {
   isEdit.value = false;
   form.value = {
-    id: 0,
-    objId: '',
-    title: '',
-    content: '',
-    time: '',
-    token: '',
-    image: '',
-    background: ''
+    userId: 0,
+    username: '',
+    email: '',
+    gender: '',
+    address: '',
+    birthdate: '',
+    registrationTime: '',
+    level: 0,
+    nickName: '',
+    avatar: '',
+    backImg: '',
+    userImage: '',
+    bio: ''
   };
   visible.value = true;
 };
 
 const handleEdit = (index: number, row: TableData) => {
-  isEdit.value = true;       // 定义为编辑
+  isEdit.value = true;
   form.value = { ...row };
-  visible.value = true;       // 调出model框
+  visible.value = true;
 };
 
 const handleDelete = (index: number, row: TableData) => {
@@ -156,12 +236,10 @@ const handleImageChange = (file) => {
   const rawFile = file.file;
   const reader = new FileReader();
   reader.onload = (e) => {
-    form.value.image = e.target?.result as string;
-
+    form.value.avatar = e.target?.result as string;
     const formData = new FormData();
     formData.append('image', rawFile);
     console.log(formData);
-    
   };
   reader.readAsDataURL(rawFile);
 };
@@ -170,33 +248,40 @@ const handleBackgroundChange = (file) => {
   const rawFile = file.file;
   const reader = new FileReader();
   reader.onload = (e) => {
-    form.value.background = e.target?.result as string;
+    form.value.backImg = e.target?.result as string;
   };
   reader.readAsDataURL(rawFile);
 };
 
 const bkupload = (file) => {
-
+  // 处理上传背景图片逻辑
 }
 
 const bkuploadsuccess = (response, file, row) => {
-
+  // 处理上传背景图片成功逻辑
 }
 
+const userImageUpload = (file) => {
+
+}
+const userImageUploadSuccess = (response, file, row) => {
+  row.userImage = response.url
+}
 const handleSubmit = () => {
   if (isEdit.value) {
-    const index = tableData.value.findIndex(item => item.id === form.value.id);
+    const index = tableData.value.findIndex(item => item.userId === form.value.userId);
     if (index !== -1) {
       tableData.value[index] = { ...form.value };
     }
   } else {
-    form.value.id = tableData.value.length ? Math.max(...tableData.value.map(item => item.id)) + 1 : 1;
+    form.value.userId = tableData.value.length ? Math.max(...tableData.value.map(item => item.userId)) + 1 : 1;
     tableData.value.push({ ...form.value });
   }
   visible.value = false;
 };
 
 </script>
+
 <style scoped>
 .search-box {
   margin-bottom: 20px;

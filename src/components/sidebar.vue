@@ -112,6 +112,11 @@ const items = [
                 index: '/videos',
                 title: '视频管理',
                 permiss: '2'
+            },
+            {
+                index: '/location',
+                title: '位置坐标',
+                permiss: '2'
             }
         ],
     },
