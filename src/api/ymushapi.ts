@@ -1,3 +1,4 @@
+import { pa } from 'element-plus/es/locale';
 import instance from './ymush';
 
 
@@ -144,6 +145,66 @@ export const mushEditSearch = async () => {
         return reponse;
     } catch (error) {
         console.log(error);
+    }
+}
+// 关联位置
+export const mushPlace = async (mushroomId: number, locationId: number) => {
+    try {
+        
+        const response = await instance.post('/mushroomLocation',null, {
+            params: {
+                mushroomId: mushroomId,
+                locationId: locationId
+            }
+        })
+        return response;
+    } catch (error) {
+        console.log(error);
+        
+    }
+}
+
+export const mushPlaces = async (mushrooId: number, location: any) => {
+    try {
+        let data ={
+            mushroomId: mushrooId,
+            location: location
+        }
+        console.log(location);
+        
+        const response = await instance.post('/mushroomLocation/savemore', data )
+        return response;
+    } catch (error) {
+        console.log(error);   
+    }
+}
+
+export const mushPlaceDelete = async (mushroomId: number, locationId: number) => {
+    try {
+        const response = await instance.delete('/mushroomLocation', {
+            params: {
+                mushroomId: mushroomId,
+                locationId: locationId
+            }
+        })
+        return response;
+    } catch (error) {
+        console.log(error);
+        
+    }
+}
+
+export const mushPlaceDeleteAll = async(mushroomId: number) => {
+    try {
+        const response = await instance.delete('/mushroomLocation/all', {
+            params: {
+                mushroomId: mushroomId
+            }
+        })
+        return response;
+    } catch (error) {
+        console.log(error);
+        
     }
 }
 

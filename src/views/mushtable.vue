@@ -25,6 +25,11 @@
 				<el-table-column prop="locations" label="分布地点" align="center" width="150">
 					<!-- <el-table-column label="省级行政区"/>
 					<el-table-column label="城市"/> -->
+					<template #default="scope">
+						<div v-for="(location, index) in scope.row.locations" :key="index">
+							{{ location.province }} - {{ location.city }}
+						</div>
+					</template>
 				</el-table-column>
 				<el-table-column prop="mushroomDesc" label="描述"  width="200">
 					<template #default="scope">
@@ -43,7 +48,7 @@
 							:icon="Edit"
 							@click="addlocation(scope.$index, scope.row)"
 							v-permiss="15">
-							添加地点
+							管理地点
 						</el-button>
 						<el-button
 							type="primary"
@@ -85,6 +90,7 @@
 					:total="pageTotal"
 					@current-change="handlePageChange"
 				></el-pagination>
+				
 			</div>
 		</div>
 		<el-dialog
@@ -109,24 +115,56 @@
 		>
 			<MushroomImg :data="imgData" :update="updateImg"/>
 		</el-dialog>
-		<el-dialog v-model="mapsee" title="选择地点" :custom-class="'custom-dialog'">
-			<el-transfer v-model="selectedOptions" :data="placedata" :props="{key: 'key', label: 'label', disabled: 'disabled'}"/>
+		<el-dialog v-model="mapsee" title="选择地点" :custom-class="'custom-dialog'" height="500px" :style="{ height: '500px' }">
+			<div class="dialog-content">
+				<el-select-v2
+					v-model="selectedOptions"
+					:options="placedata"
+					:props="selectProps"
+					placeholder="请选择"
+					class="el-select-v2"
+					filterable
+					multiple
+				/>
+				<el-table
+					:data="placesuseddata"
+					class="el-table"
+				>
+					<el-table-column prop="label" label="已存在地点" width="200" />
+					<el-table-column label="操作" width="280" align="center">
+					<template #default="scope">
+						<el-button
+							type="danger"
+							size="small"
+							:icon="Delete"
+							@click="placedelete(scope.row)"
+							v-permiss="16"
+						>
+							删除
+						</el-button>
+					</template>
+				</el-table-column>
+				</el-table>
+				
+			</div>
 			<div slot="footer" class="dialog-footer custom-footer">
+				<el-button type="danger" @click="placedeleteAll">全部删除</el-button>
 				<el-button @click="mapsee = false">取消</el-button>
 				<el-button type="primary" @click="mapsave">保存</el-button>
 			</div>
 		</el-dialog>
+
 	</div>
 </template>
 
 <script setup lang="ts" name="basetable">
 import { ref, reactive } from 'vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessage, ElMessageBox, ElTable } from 'element-plus';
 import { Delete, Edit, Search, CirclePlusFilled, View } from '@element-plus/icons-vue';
 import TableEdit from '../components/mushtable-edit.vue';
 import TableDetail from '../components/table-detail.vue';
 import MushroomImg from '../components/mushrooms-img.vue'
-import { mushSearch, mushSearchOne, mushDelete, mapget } from '../api/ymushapi';
+import { mushSearch, mushSearchOne, mushDelete, mapget, mushPlace, mushPlaces, mushPlaceDelete, mushPlaceDeleteAll } from '../api/ymushapi';
 
 
 // 获取身份密钥
@@ -147,6 +185,7 @@ interface TableItem {
 	mushroomLocation: string;
 	mushroomDesc: string;
 	mushroom3d: string;
+	locations: { id: number; province: string; city: string; latitude: number; longitude: number; }[];
 }
 
 const query = reactive({
@@ -157,6 +196,7 @@ const query = reactive({
 });
 // 存储表格数据
 const tableData = ref<TableItem[]>([]);
+
 
 // 存储分页总数
 const pageTotal = ref(0);
@@ -225,41 +265,101 @@ interface Option {
 	label: string
 	disabled: boolean
 }
+const selectProps = {
+  value: 'id',
+  label: 'label'
+};
 
-interface LocationData {
-	id: number;
-	province: string;
-	city: string;
-}
+const placedata = ref<Option[]>([]);
+const selectedOptions = ref([])
 
-const placedata = ref<Option[]>()
-const selectedOptions = ref<Option[]>([])
+// dialog右侧表单 数据数组
+let placesuseddata = ref([])
+
+let selectedRow = ref()
 const addlocation = async (index: number, row: any) => {
   console.log('index:', index, 'row', row);
+  selectedRow.value = row.mushroomId
+  placesuseddata.value = row.locations.map(location => ({
+	label: `${location.province} - ${location.city}`,
+	value: location.id
+  }))
+  console.log(selectedRow.value);
+  
   const res = await mapget(headers);
   console.log(res.data.data);
 
-  // Assuming res.data.data is an array of LocationData
-  const locationData: LocationData[] = res.data.data;
-
-  // Map the data to Option[]
-  const newPlaceData: Option[] = locationData.map((location, idx) => ({
-	id: location.id,
-	key: idx + 1, // or use another unique identifier
-    label: `${location.province} - ${location.city}`,
-    disabled: false, // Adjust this if you need some conditions to disable the option
-  }));
-
-  console.log(newPlaceData);
-  
-  placedata.value = newPlaceData;
+  placedata.value = res.data.data.map((item: any, index: number) => {
+	return {
+	  id: item.id,
+	  key: item.id,
+	  label: `${item.province} - ${item.city}`,
+	  disabled: false
+	}
+  })
   mapsee.value = true;
 };
 
+
+// single delete
+const placedelete = async (row: any) => {
+	console.log(selectedRow.value);
+	
+	console.log(row.value);
+	ElMessageBox.confirm('确定要删除吗？', '提示', {
+      type: 'warning'
+    })
+    .then(
+      async () => {
+        const res = await mushPlaceDelete(selectedRow.value, row.value)
+        console.log(res);
+        if(res.data.code = 200){
+          ElMessage.success('删除成功')
+		  placesuseddata.value = placesuseddata.value.filter(
+          (place: any) => place.value !== row.value
+        );
+        } else {
+          ElMessage.error('删除失败')
+        }
+        
+      }
+    )
+}
+
+// locations all delete
+const placedeleteAll = async () => {
+	const res = await mushPlaceDeleteAll(selectedRow.value)
+	console.log(res);
+	if(res.data.code = 200){
+		ElMessage.success('删除成功')
+		mapsee.value = false
+		getData()
+	} else {
+		ElMessage.error('删除失败')
+	}
+	
+}
+
+
 const mapsave = async() => {
 	mapsee.value = false
-	console.log(selectedOptions.value);
-	
+	console.log(selectedOptions.value[0]);
+	if(selectedOptions.value.length == 1){
+		const res = await mushPlace(selectedRow.value, selectedOptions.value[0])
+		console.log(res);
+	} else if (selectedOptions.value.length == 0) {
+		ElMessage.success('保存成功')
+	} else {
+		console.log('多选',selectedOptions.value);
+		// 将 Proxy 对象转换为数组
+		const selectedArray = Array.from(selectedOptions.value);
+		// const selectedArray = [...selectedOptions.value];  // 另一种转换方法
+
+		console.log('转换后的数组', selectedArray);
+		const res = await mushPlaces(selectedRow.value, selectedArray)
+		console.log(res);
+	}
+	getData()
 }
 // ----------------------------------------------------------------------
 const visible = ref(false);
@@ -331,5 +431,17 @@ const upCategoryImg = (index: number, row: TableItem) => {
   position: absolute;
   right: 20px;
   bottom: 20px;
+}
+.dialog-content {
+	display: flex;
+}
+
+.dialog-content .el-select-v2 {
+	width: 240px;
+	margin-right: 20px;
+}
+
+.dialog-content .el-table {
+	flex-grow: 1;
 }
 </style>
