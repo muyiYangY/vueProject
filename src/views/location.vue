@@ -60,7 +60,7 @@
   import * as XLSX from 'xlsx';
   import 'element-plus/dist/index.css';
   import { ElTable, ElTableColumn, ElMessage, ElMessageBox } from 'element-plus';
-  import { mapget, mapsave, mapdelete, mapsavelist } from '../api/ymushapi'
+  import { mapget, mapsave, mapdelete, mapsavelist, mapupdate } from '../api/ymushapi'
   import { Delete, Edit, Search, CirclePlusFilled, View } from '@element-plus/icons-vue';
   
   interface Location {
@@ -111,6 +111,7 @@
         description: ''
       }
     visible.value = true
+    console.log(isEdit.value);
     
   }
 
@@ -123,7 +124,7 @@
       longitude: form.value.longitude,
       description: form.value.description
     }
-    if(isEdit){
+    if(!isEdit.value){
       const res = await mapsave(info, headers)
       console.log(res);
       if(res.data.code == 200){
@@ -135,6 +136,25 @@
       }
     } else {
       // 修改数据
+      let inffoo = {
+        id: form.value.id,
+        province: form.value.province,
+        city: form.value.city,
+        latitude: form.value.latitude,
+        longitude: form.value.longitude,
+        description: form.value.description
+      }
+      console.log(inffoo);
+      
+      const res = await mapupdate(inffoo, headers)
+      if(res.data.code == 200){
+        ElMessage.success('修改成功!!')
+        visible.value = false
+        getData()
+      } else {
+        ElMessage.error('修改失败')
+      }
+      
     }
     
   }
@@ -145,7 +165,6 @@
     form.value = {...row}
     visible.value = true
     console.log(index, row);
-    
   }
 
   // 删除数据

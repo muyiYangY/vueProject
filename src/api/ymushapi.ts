@@ -332,3 +332,14 @@ export const mushPlaceDeleteAll = async(mushroomId: number) => {
         
     }
   }
+
+  // 修改数据
+  export const mapupdate = async (data: any, headers: any) => {
+    try {
+        const response = await instance.put('/location', data, {headers})
+        return response
+    } catch (error) {
+        console.log(error);
+        
+    }
+  }
